@@ -1,0 +1,13 @@
+{
+  "name": "dungeon-keys",
+  "version": "1.0.0",
+  "description": "地牢密钥 - 3D 地牢解谜冒险微信小游戏",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --dev --watch",
+    "serve": "node web/serve.mjs"
+  },
+  "dependencies": { "three": "0.162.0" },
+  "devDependencies": { "esbuild": "^0.28.2" }
+}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>地牢密钥 · 小游戏环境模拟</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#000;touch-action:none}canvas{display:block}</style>
+</head>
+<body>
+<script>
+// 在浏览器里模拟一个最小的 wx 小游戏 API，用来走一遍 adapter.js 与 platform 的 wx 分支
+(function () {
+  var first = true;
+  var listeners = { start: [], move: [], end: [], cancel: [] };
+  var W = innerWidth, H = innerHeight;
+  function mk(e) { return { identifier: e.pointerId, clientX: e.clientX, clientY: e.clientY }; }
+  var active = {};
+  window.GameGlobal = window;
+  window.wx = {
+    createCanvas: function () {
+      var c = document.createElement('canvas');
+      if (first) {
+        first = false;
+        c.width = W; c.height = H;
+        c.style.width = W + 'px'; c.style.height = H + 'px';
+        document.body.appendChild(c);
+        c.addEventListener('pointerdown', function (e) { active[e.pointerId] = mk(e); fire('start', e); });
+        c.addEventListener('pointermove', function (e) { if (active[e.pointerId]) { active[e.pointerId] = mk(e); fire('move', e); } });
+        c.addEventListener('pointerup', function (e) { delete active[e.pointerId]; fire('end', e); });
+      }
+      return c;
+    },
+    getSystemInfoSync: function () { return { windowWidth: W, windowHeight: H, pixelRatio: devicePixelRatio, platform: 'devtools', safeArea: { left: 0, right: W, top: 0, bottom: H } }; },
+    onTouchStart: function (f) { listeners.start.push(f); },
+    onTouchMove: function (f) { listeners.move.push(f); },
+    onTouchEnd: function (f) { listeners.end.push(f); },
+    onTouchCancel: function (f) { listeners.cancel.push(f); },
+    getStorageSync: function (k) { return localStorage.getItem('wxsim_' + k) || ''; },
+    setStorageSync: function (k, v) { localStorage.setItem('wxsim_' + k, v); },
+    removeStorageSync: function (k) { localStorage.removeItem('wxsim_' + k); },
+    createWebAudioContext: function () { return new AudioContext(); },
+    onHide: function () {}, onShow: function () {}, onWindowResize: function () {},
+    vibrateShort: function () {}, showShareMenu: function () {}, onShareAppMessage: function () {},
+    createImage: function () { return new Image(); },
+  };
+  function fire(type, e) {
+    var touches = Object.keys(active).map(function (k) { return active[k]; });
+    var ev = { changedTouches: [mk(e)], touches: touches };
+    listeners[type].forEach(function (f) { f(ev); });
+  }
+})();
+</script>
+<script src="../js/adapter.js"></script>
+<script src="../js/bundle.js"></script>
+</body>
+</html>
